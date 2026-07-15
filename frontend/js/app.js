@@ -65,8 +65,22 @@ document.addEventListener('DOMContentLoaded', () => {
         
         try {
             loadingText.innerText = 'Analyzing image with AI...';
+            
+            const jpegBlob = await new Promise((resolve, reject) => {
+                const img = new window.Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    canvas.getContext('2d').drawImage(img, 0, 0);
+                    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.92);
+                };
+                img.onerror = () => reject(new Error('Could not read the image. Please try a different photo.'));
+                img.src = imagePreview.src;
+            });
+
             const formData = new FormData();
-            formData.append('file', selectedFile);
+            formData.append('file', jpegBlob, 'photo.jpg');
 
             const predictRes = await fetch('/api/predict', {
                 method: 'POST',
