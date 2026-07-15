@@ -22,9 +22,9 @@
 |:---:|:---:|
 | ![Upload](assets/upload.png) | ![Translation](assets/translation.png) |
 
-| Prediction Results & Confidence | Supported Crops |
+| Prediction Results | |
 |:---:|:---:|
-| ![Results](assets/results.png) | ![Crops](assets/crops.png) |
+| ![Results](assets/results.png) | |
 
 ---
 
