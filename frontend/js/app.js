@@ -164,8 +164,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!explainRes.ok) {
-                const errorData = await explainRes.json().catch(() => ({}));
-                throw new Error(errorData.detail || 'Failed to fetch explanation');
+                let errorMsg = 'Failed to fetch explanation';
+                try {
+                    const errorText = await explainRes.text();
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        errorMsg = errorJson.detail || errorText;
+                    } catch (e) {
+                        errorMsg = errorText; // Not JSON, probably an HTML error from Render
+                    }
+                } catch (e) {}
+                throw new Error(errorMsg);
             }
 
             const explainData = await explainRes.json();
