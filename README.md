@@ -125,6 +125,8 @@ cropguard-ai/
 
 ## 🌱 Supported Crops
 
+If you want to use it instantly visit : https://cropguard-ai-6odb.onrender.com/
+
 Apple 🍎 | Blueberry 🫐 | Cherry 🍒 | Corn 🌽 | Grape 🍇 
 Orange 🍊 | Peach 🍑 | Pepper 🌶️ | Potato 🥔 | Raspberry 🔴 
 Soybean 🫘 | Squash 🎃 | Strawberry 🍓 | Tomato 🍅
