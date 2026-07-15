@@ -2,7 +2,6 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import tensorflow as tf
 import numpy as np
 from PIL import Image
 import io
@@ -21,16 +20,16 @@ app.add_middleware(
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "models", "crop_disease_model.h5")
+MODEL_PATH = os.path.join(BASE_DIR, "models", "crop_disease_model.tflite")
 CLASS_NAMES_PATH = os.path.join(BASE_DIR, "models", "class_names.json")
 FRONTEND_DIR = os.path.join(os.path.dirname(BASE_DIR), "frontend")
 
-model = None
+interpreter = None
 class_names = {}
 
 @app.on_event("startup")
 async def startup_event():
-    global model, class_names
+    global interpreter, class_names
     
     print("Loading class names...")
     if os.path.exists(CLASS_NAMES_PATH):
@@ -40,11 +39,13 @@ async def startup_event():
     else:
         print(f"WARNING: Class names not found at {CLASS_NAMES_PATH}")
 
-    print("Loading model...")
+    print("Loading TFLite model...")
     if os.path.exists(MODEL_PATH):
         try:
-            model = tf.keras.models.load_model(MODEL_PATH)
-            print("Model loaded successfully!")
+            import tflite_runtime.interpreter as tflite
+            interpreter = tflite.Interpreter(model_path=MODEL_PATH)
+            interpreter.allocate_tensors()
+            print("TFLite model loaded successfully!")
         except Exception as e:
             print(f"Error loading model: {e}")
     else:
@@ -53,12 +54,12 @@ async def startup_event():
 def preprocess_image(image_bytes):
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     image = image.resize((224, 224))
-    image_array = np.array(image) / 255.0
+    image_array = np.array(image, dtype=np.float32) / 255.0
     return np.expand_dims(image_array, axis=0)
 
 @app.post("/api/predict")
 async def predict(file: UploadFile = File(...)):
-    if model is None:
+    if interpreter is None:
         raise HTTPException(status_code=503, detail="Model is not loaded. Please ensure the model file exists.")
     
     if not file.content_type.startswith("image/"):
@@ -68,7 +69,12 @@ async def predict(file: UploadFile = File(...)):
         image_bytes = await file.read()
         image_tensor = preprocess_image(image_bytes)
         
-        predictions = model.predict(image_tensor)
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+        interpreter.set_tensor(input_details[0]['index'], image_tensor)
+        interpreter.invoke()
+        predictions = interpreter.get_tensor(output_details[0]['index'])
+        
         predicted_index = str(np.argmax(predictions[0]))
         confidence = float(np.max(predictions[0]))
         
