@@ -150,7 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!explainRes.ok) {
-                throw new Error('Failed to fetch explanation');
+                const errorData = await explainRes.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Failed to fetch explanation');
             }
 
             const explainData = await explainRes.json();
@@ -158,7 +159,17 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (aiError) {
             console.error('AI Error:', aiError);
             document.getElementById('hindiExplanation').innerHTML = '';
-            document.getElementById('aiErrorState').classList.remove('hidden');
+            const errState = document.getElementById('aiErrorState');
+            errState.classList.remove('hidden');
+            errState.innerHTML = `
+                <div class="error-banner">
+                    <span class="error-icon">⚠️</span>
+                    <div>
+                        <h4 style="margin: 0; color: #b91c1c;">Explanation Unavailable</h4>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem;">Error: ${aiError.message}</p>
+                    </div>
+                </div>
+            `;
         }
     }
     
