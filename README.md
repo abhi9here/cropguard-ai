@@ -22,7 +22,7 @@
 |:---:|:---:|
 | ![Upload](assets/upload.png) | ![Translation](assets/translation.png) |
 
-| Prediction Results | |
+| Available Crops Options | |
 |:---:|:---:|
 | ![Results](assets/results.png) | |
 
